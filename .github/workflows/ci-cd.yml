@@ -28,7 +28,7 @@ jobs:
       - name: Checkout manifests repository
         uses: actions/checkout@v3
         with:
-          repository: ruanmarduk/hello-manifests
+          repository: RuanMarduk/hello-manifests
           token: ${{ secrets.GITHUB_TOKEN }}
           path: manifests
 

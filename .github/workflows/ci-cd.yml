@@ -20,7 +20,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE=RuanMarduk/hello-app
+          IMAGE=docker.io/RuanMarduk/hello-app
           TAG=${{ github.sha }}
           docker build -t $IMAGE:$TAG .
           docker push $IMAGE:$TAG
@@ -35,9 +35,9 @@ jobs:
       - name: Update deployment.yaml with new image
         run: |
           cd manifests
-          sed -i "s|image: .*|image: RuanMarduk/hello-app:${{ github.sha }}|" deployment.yaml
+          # CORREÇÃO: A linha 'sed' foi atualizada para incluir o domínio do Docker Hub
+          sed -i "s|image: .*|image: docker.io/RuanMarduk/hello-app:${{ github.sha }}|" deployment.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
           git commit -am "Update image to ${{ github.sha }}"
           git push
-

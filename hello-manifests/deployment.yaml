@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: hello-app
-        image: RuanMarduk/hello-app:latest
+        image: docker.io/RuanMarduk/hello-app:latest
         ports:
         - containerPort: 80

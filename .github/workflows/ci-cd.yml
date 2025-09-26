@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout app repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
@@ -23,22 +23,16 @@ jobs:
           IMAGE=docker.io/ruanmarduk/hello-app
           TAG=${{ github.sha }}
           docker build -t $IMAGE:$TAG .
-          docker tag $IMAGE:$TAG $IMAGE:latest # Adicionada a tag "latest"
+          docker tag $IMAGE:$TAG $IMAGE:latest
           docker push $IMAGE:$TAG
-          docker push $IMAGE:latest # Envia a imagem com a tag "latest"
-
-      - name: Checkout manifests repository
-        uses: actions/checkout@v3
-        with:
-          repository: RuanMarduk/hello-manifests
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: manifests
+          docker push $IMAGE:latest
 
       - name: Update deployment.yaml with new image
         run: |
-          cd manifests
+          cd hello-manifests  # Navegue para a pasta de manifestos
           sed -i "s|image: .*|image: docker.io/ruanmarduk/hello-app:${{ github.sha }}|" deployment.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git commit -am "Update image to ${{ github.sha }}"
+          git add deployment.yaml
+          git commit -m "Update image to ${{ github.sha }}"
           git push

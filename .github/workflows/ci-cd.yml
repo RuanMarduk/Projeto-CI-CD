@@ -23,7 +23,9 @@ jobs:
           IMAGE=docker.io/ruanmarduk/hello-app
           TAG=${{ github.sha }}
           docker build -t $IMAGE:$TAG .
+          docker tag $IMAGE:$TAG $IMAGE:latest # Adicionada a tag "latest"
           docker push $IMAGE:$TAG
+          docker push $IMAGE:latest # Envia a imagem com a tag "latest"
 
       - name: Checkout manifests repository
         uses: actions/checkout@v3

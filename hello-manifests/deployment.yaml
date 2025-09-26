@@ -19,3 +19,5 @@ spec:
         image: docker.io/ruanmarduk/hello-app:latest
         ports:
         - containerPort: 80
+      imagePullSecrets:
+      - name: regcred

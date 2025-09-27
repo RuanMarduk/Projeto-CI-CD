@@ -1,72 +1,123 @@
-# 🚀 Projeto CI/CD com Docker, GitHub Actions, Kubernetes e ArgoCD
+```markdown
+🚀 Projeto CI/CD com Docker, GitHub Actions, Kubernetes e ArgoCD
 
-## 📌 Visão Geral
-Este repositório contém um pipeline completo de **Integração Contínua (CI)** e **Entrega Contínua (CD)** utilizando as seguintes tecnologias:
+📌 Visão Geral e Conceitos  
+Este repositório documenta a criação de um pipeline completo de Integração Contínua (CI) e Entrega Contínua (CD), que são pilares fundamentais da metodologia DevOps. O objetivo é automatizar o ciclo de desenvolvimento de uma aplicação FastAPI desde o código até a produção.
 
-- **Docker** → Containerização da aplicação.
-- **GitHub Actions** → Automação do build e push da imagem.
-- **Docker Hub** → Registro de imagens.
-- **Kubernetes** → Orquestração de containers.
-- **ArgoCD** → Continuous Delivery e sincronização automática dos manifests.
+**Docker**: É a tecnologia de containerização que empacota nossa aplicação e todas as suas dependências em um ambiente isolado e portátil, garantindo que ela rode de forma consistente em qualquer lugar.  
+
+**GitHub Actions**: É a plataforma de automação do GitHub que executa workflows (sequências de tarefas) em resposta a eventos no repositório, como um git push. Ele será o nosso motor de CI.  
+
+**Docker Hub**: É um serviço de registro de imagens Docker, onde armazenamos e gerenciamos as imagens prontas da nossa aplicação, prontas para serem baixadas e executadas.  
+
+**Kubernetes**: É uma plataforma de orquestração de containers que gerencia o ciclo de vida das nossas aplicações em ambientes de cluster. Ele garante a alta disponibilidade e escalabilidade.  
+
+**ArgoCD**: É uma ferramenta de GitOps para o Kubernetes. Ele atua como o nosso motor de CD, monitorando nosso repositório Git e aplicando automaticamente qualquer alteração nos manifestos de deploy ao cluster.  
 
 ---
 
-## 🛠️ Estrutura do Projeto
+🛠️ Estrutura do Projeto  
+
+A estrutura de pastas foi organizada para separar claramente o código da aplicação dos arquivos de infraestrutura.
+
 ```
 Projeto-CI-CD/
 │
-├── app/                     # Código da aplicação (Flask)
+├── app/                  # Código da aplicação (FastAPI) e suas dependências.
 │   ├── main.py
-│   ├── requirements.txt
+│   └── requirements.txt
 │
-├── hello-manifests/         # Manifests do Kubernetes
+├── hello-manifests/      # Pasta dedicada para os manifests do Kubernetes.
 │   ├── deployment.yaml
-│   ├── service.yaml
+│   └── service.yaml
 │
-├── .github/workflows/       # Pipeline GitHub Actions
-│   ├── ci-cd.yml
+├── .github/workflows/    # Onde reside o arquivo de workflow do GitHub Actions.
+│   └── ci-cd.yml
 │
-├── Dockerfile               # Dockerfile da aplicação
-└── README.md                # Este arquivo
+├── Dockerfile            # O arquivo de instruções para construir a imagem Docker da aplicação.
+└── README.md             # Este arquivo de documentação.
 ```
 
 ---
 
-## 🐳 Docker
+🐳 **Docker**
 
 ### Criar a imagem localmente
+Para testar o build do container sem usar o GitHub Actions, execute:
+
 ```bash
 docker build -t seu-usuario-dockerhub/hello-app:latest .
 ```
+
+A flag `-t` (tag) nomeia a imagem. A tag `seu-usuario-dockerhub/hello-app:latest` é usada para identificar a imagem no seu repositório local e futuro envio para o Docker Hub.
 
 ### Rodar localmente
 ```bash
 docker run -p 5000:5000 seu-usuario-dockerhub/hello-app:latest
 ```
 
----
-
-## ⚙️ GitHub Actions
-
-**Arquivo:** `.github/workflows/ci-cd.yml`
-
-**Fluxo:**
-1. Build da imagem Docker.  
-2. Login no Docker Hub com secrets.  
-3. Push da imagem para o repositório Docker Hub.  
-4. Atualização automática dos manifestos no repositório `hello-manifests`.  
-
-**Configuração de Secrets:**
-- `DOCKER_USERNAME` → Seu usuário do Docker Hub.  
-- `DOCKER_PASSWORD` → Token de acesso gerado no Docker Hub.  
+A flag `-p` mapeia a porta 5000 da sua máquina para a porta 5000 do container.
 
 ---
 
-## ☸️ Kubernetes
+⚙️ **GitHub Actions**
 
-### Manifests
+O arquivo `ci-cd.yml` define a lógica do nosso pipeline de CI/CD.
 
-**Arquivo `deployment.yaml`:**
+Arquivo: `.github/workflows/ci-cd.yml`
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE=docker.io/ruanmarduk/hello-app
+          TAG=${{ github.sha }}
+          docker build -t $IMAGE:$TAG .
+          docker tag $IMAGE:$TAG $IMAGE:latest
+          docker push $IMAGE:$TAG
+          docker push $IMAGE:latest
+
+      - name: Update deployment.yaml with new image
+        run: |
+          cd hello-manifests
+          git pull origin main
+          sed -i "s|image: .*|image: docker.io/ruanmarduk/hello-app:${{ github.sha }}|" deployment.yaml
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add deployment.yaml
+          git commit -m "Update image to ${{ github.sha }}"
+          git push
+```
+
+Secrets necessários no GitHub → `Settings > Secrets and variables > Actions`:
+
+- `DOCKER_USERNAME` → Seu usuário do Docker Hub  
+- `DOCKER_PASSWORD` → Token de acesso do Docker Hub  
+
+---
+
+☸️ **Kubernetes**
+
+### deployment.yaml
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -84,12 +135,14 @@ spec:
     spec:
       containers:
       - name: hello-app
-        image: seu-usuario-dockerhub/hello-app:latest
+        image: docker.io/ruanmarduk/hello-app:latest
         ports:
         - containerPort: 5000
+      imagePullSecrets:
+      - name: regcred
 ```
 
-**Arquivo `service.yaml`:**
+### service.yaml
 ```yaml
 apiVersion: v1
 kind: Service
@@ -107,64 +160,39 @@ spec:
 
 ---
 
-## 🎯 ArgoCD
+🎯 **ArgoCD**
 
-### Instalação (via kubectl)
+Instalação:
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-### Acesso ao ArgoCD UI
+Acesso à UI:
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
+Abrir no navegador: https://localhost:8080  
 
-Acesse em: **https://localhost:8080**  
-
-- Usuário: `admin`  
-- Senha inicial:
+Usuário: `admin`  
+Senha inicial:
 ```bash
 kubectl -n argocd get secret argocd-secret -o jsonpath="{.data.admin\.password}" | base64 -d
 ```
 
 ---
 
-## 🚀 Fluxo Final do CI/CD
+✅ **Verificação e Conclusão**
 
-### 1. Correções na Pipeline do GitHub Actions
-- O workflow `ci-cd.yml` foi ajustado para garantir que a imagem seja construída e enviada corretamente para o Docker Hub com a tag `latest`.  
-- Login ao Docker Hub usando o secret `DOCKER_PASSWORD`.  
-- Nome da imagem padronizado: `docker.io/ruanmarduk/hello-app`.  
-- Imagem construída com duas tags: `commit SHA` e `latest`.  
-- Atualização do `deployment.yaml` com a nova tag usando `sed`.  
-- Push automático dos manifests atualizados para o repositório `hello-manifests`.  
-- Workflow configurado com permissões **Read and write** para evitar erros de `Permission denied`.  
+1. **ArgoCD** exibe `hello-app` como `Synced` e `Healthy`.  
+2. `kubectl get pods` mostra os pods rodando.  
+3. A aplicação pode ser acessada em `http://localhost:8080` exibindo:  
 
-### 2. Configuração da Aplicação no ArgoCD
-- Aplicação `hello-app` criada no ArgoCD, apontando para o repositório de manifestos.  
-- O ArgoCD monitora o repositório e aplica atualizações automaticamente no cluster.  
-- Criado um secret `regcred` no Kubernetes com as credenciais do Docker Hub.  
-- `deployment.yaml` atualizado com:
-```yaml
-imagePullSecrets:
-  - name: regcred
+```json
+{"message":"Hello World"}
 ```
 
-### 3. Verificação do Deploy e Acesso à Aplicação
-- **Status da Aplicação:** No ArgoCD, a aplicação aparece como `Synced` e `Healthy`.  
-- **Pods em Execução:**  
-  ```bash
-  kubectl get pods
-  ```
-  Resultado esperado: pods `Running`.  
-- **Acesso Local:**  
-  ```bash
-  kubectl port-forward svc/hello-service 8080:80
-  ```
-  Abra [http://localhost:8080](http://localhost:8080) → deve retornar:  
-  ```json
-  {"message": "Hello World"}
-  ```
-
 ---
+
+Esse pipeline automatiza **todo o ciclo de vida da aplicação**, do commit no GitHub até o deploy no Kubernetes com ArgoCD.
+```

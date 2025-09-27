@@ -60,6 +60,11 @@ A flag `-p` mapeia a porta 5000 da sua máquina para a porta 5000 do container.
 
 ---
 
+
+* **Tagging e Push da Imagem:** A imagem é agora construída com a tag do `commit SHA` e uma tag adicional **`latest`**. Ambas são enviadas ao Docker Hub para garantir que o ArgoCD sempre encontre a versão mais atual.
+
+![Descrição da imagem](images/dockerhub.png)
+
 ⚙️ **GitHub Actions**
 
 O arquivo `ci-cd.yml` define a lógica do nosso pipeline de CI/CD.
@@ -184,9 +189,17 @@ kubectl -n argocd get secret argocd-secret -o jsonpath="{.data.admin\.password}"
 
 ✅ **Verificação e Conclusão**
 
-1. **ArgoCD** exibe `hello-app` como `Synced` e `Healthy`.  
-2. `kubectl get pods` mostra os pods rodando.  
-3. A aplicação pode ser acessada em `http://localhost:8080` exibindo:  
+**Status no Kubernetes**: O comando `kubectl get pods` mostra que o pod da aplicação está em estado **`Running`**.
+![Descrição da imagem](images/kubectl.png)
+
+
+1. **ArgoCD** exibe `hello-app` como `Synced` e `Healthy`.
+   ![Descrição da imagem](images/argocd.png)
+   
+2. `kubectl get pods` mostra os pods rodando.
+   ![Descrição da imagem](images/kubectl.png)
+3. A aplicação pode ser acessada em `http://localhost:8080` exibindo:
+   ![Descrição da imagem](images/localhost.png)
 
 ```json
 {"message":"Hello World"}

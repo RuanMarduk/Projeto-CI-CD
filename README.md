@@ -1,7 +1,6 @@
-```markdown
-🚀 Projeto CI/CD com Docker, GitHub Actions, Kubernetes e ArgoCD
+Projeto CI/CD com Docker, GitHub Actions, Kubernetes e ArgoCD
 
-📌 Visão Geral e Conceitos  
+ Visão Geral e Conceitos  
 Este repositório documenta a criação de um pipeline completo de Integração Contínua (CI) e Entrega Contínua (CD), que são pilares fundamentais da metodologia DevOps. O objetivo é automatizar o ciclo de desenvolvimento de uma aplicação FastAPI desde o código até a produção.
 
 **Docker**: É a tecnologia de containerização que empacota nossa aplicação e todas as suas dependências em um ambiente isolado e portátil, garantindo que ela rode de forma consistente em qualquer lugar.  
@@ -16,31 +15,32 @@ Este repositório documenta a criação de um pipeline completo de Integração 
 
 ---
 
-🛠️ Estrutura do Projeto  
+ Estrutura do Projeto  
 
 A estrutura de pastas foi organizada para separar claramente o código da aplicação dos arquivos de infraestrutura.
 
-```
+
+```text
 Projeto-CI-CD/
-│
-├── app/                  # Código da aplicação (FastAPI) e suas dependências.
+├── app/                          # Código da aplicação (FastAPI) e suas dependências
 │   ├── main.py
 │   └── requirements.txt
 │
-├── hello-manifests/      # Pasta dedicada para os manifests do Kubernetes.
+├── hello-manifests/              # Manifests do Kubernetes
 │   ├── deployment.yaml
 │   └── service.yaml
 │
-├── .github/workflows/    # Onde reside o arquivo de workflow do GitHub Actions.
-│   └── ci-cd.yml
+├── .github/
+│   └── workflows/                # Workflow do GitHub Actions
+│       └── ci-cd.yml
 │
-├── Dockerfile            # O arquivo de instruções para construir a imagem Docker da aplicação.
-└── README.md             # Este arquivo de documentação.
+├── Dockerfile                    # Instruções para construir a imagem Docker
+└── README.md                     # Documentação do projeto
 ```
 
 ---
 
-🐳 **Docker**
+ **Docker**
 
 ### Criar a imagem localmente
 Para testar o build do container sem usar o GitHub Actions, execute:
@@ -65,7 +65,7 @@ A flag `-p` mapeia a porta 5000 da sua máquina para a porta 5000 do container.
 
 ![Descrição da imagem](images/dockerhub.png)
 
-⚙️ **GitHub Actions**
+ **GitHub Actions**
 
 O arquivo `ci-cd.yml` define a lógica do nosso pipeline de CI/CD.
 
@@ -120,7 +120,7 @@ Secrets necessários no GitHub → `Settings > Secrets and variables > Actions`:
 
 ---
 
-☸️ **Kubernetes**
+ **Kubernetes**
 
 ### deployment.yaml
 ```yaml
@@ -165,7 +165,7 @@ spec:
 
 ---
 
-🎯 **ArgoCD**
+ **ArgoCD**
 
 Instalação:
 ```bash
@@ -187,7 +187,7 @@ kubectl -n argocd get secret argocd-secret -o jsonpath="{.data.admin\.password}"
 
 ---
 
-✅ **Verificação e Conclusão**
+ **Verificação e Conclusão**
 
 **Status no Kubernetes**: O comando `kubectl get pods` mostra que o pod da aplicação está em estado **`Running`**.
 ![Descrição da imagem](images/kubectl.png)

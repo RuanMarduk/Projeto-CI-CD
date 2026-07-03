@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: hello-app
-        image: docker.io/ruanmarduk/hello-app:3c86c47b54f700f63331ddd3b604a16c8287fa46
+        image: docker.io/ruanmarduk/hello-app:0e55928ec7fd3e68e6442269bd3fb1236fb228ce
         ports:
         - containerPort: 80
       imagePullSecrets:
